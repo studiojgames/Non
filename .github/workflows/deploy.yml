@@ -1,0 +1,51 @@
+name: Deploy Non
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Unzip non_files.zip if present
+        run: |
+          if [ -f non_files.zip ]; then
+            echo "non_files.zip found. extracting..."
+            mkdir -p _site
+            unzip -o non_files.zip -d _site
+            echo "extracted:"
+            ls -la _site
+          else
+            echo "no zip. publishing root files as-is."
+            mkdir -p _site
+            rsync -av --exclude='.git' --exclude='.github' --exclude='_site' ./ _site/
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
