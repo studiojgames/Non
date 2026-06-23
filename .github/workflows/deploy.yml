@@ -20,19 +20,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Unzip non_files.zip if present
+      - name: Unzip zip if present
         run: |
-          if [ -f non_files.zip ]; then
-            echo "non_files.zip found. extracting..."
-            mkdir -p _site
+          mkdir -p _site
+          if [ -f "non files.zip" ]; then
+            echo "found: non files.zip"
+            unzip -o "non files.zip" -d _site
+          elif [ -f non_files.zip ]; then
+            echo "found: non_files.zip"
             unzip -o non_files.zip -d _site
-            echo "extracted:"
-            ls -la _site
+          elif [ -f nonfiles.zip ]; then
+            echo "found: nonfiles.zip"
+            unzip -o nonfiles.zip -d _site
           else
-            echo "no zip. publishing root files as-is."
-            mkdir -p _site
+            echo "no zip. publishing root files."
             rsync -av --exclude='.git' --exclude='.github' --exclude='_site' ./ _site/
           fi
+          echo "=== _site contents ==="
+          ls -la _site
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
